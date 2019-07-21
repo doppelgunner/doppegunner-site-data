@@ -1,0 +1,44 @@
+_SECTION_BEGIN("Sweet: Doppel");
+
+//#some variables
+NOT_DELISTED_GAP = 252;
+NOT_DELISTED = Now(3) - DateNum() < NOT_DELISTED_GAP;
+VALUE_AVERAGE = MA(Volume * C, 20);
+HAS_VALUE = VALUE_AVERAGE > 1000000;
+
+//using the index as for this correlation with stocks
+PSEI = Foreign("PSEI","C",1);
+
+//variables for MA
+MA_LENGTH = 50;
+MA_A = MA(PSEI, MA_LENGTH);
+MA_USER = MA(PSEI, MA_LENGTH);
+
+//finding out the correlation between the index and the stock
+corr = Correlation( Close, PSEI, MA_LENGTH );
+
+//plotting the correlation, for widget use
+Plot( corr, "Correlation " + Name(),
+      ParamColor( "Color", colorRed ), ParamStyle( "Style", styleLine ) );
+
+//ToFilter = PSEI > MA_A AND C > MA_USER;
+//Filter = LLV(ToFilter, 5);
+
+//we hide delisted and stocks that is illiquid
+Filter = NOT_DELISTED AND HAS_VALUE;
+
+//some variables for styling the result
+CORR_STRING = WriteIf(corr >= 0.3, "Correlated", WriteIf(corr <= -0.3, "Inverseley Correlated", "Neutral"));
+CORR_FGCOLOR = IIf(corr <= -0.3 OR corr >= 0.3, colorWhite, colorBlack);
+CORR_BGCOLOR = IIf(corr >= 0.3, colorBlue, IIf(corr <= -0.3, colorViolet, colorWhite));
+
+//displaying data
+AddColumn(PSEI,"PSEI", 1.2);
+AddColumn(C, "Price", 1.2);
+AddColumn(MA_A, "PSEI MA(50)", 1.2);
+AddColumn(MA_USER, "MA(50)", 1.2);
+AddTextColumn(CORR_STRING, "Correlation", Null, CORR_FGCOLOR, CORR_BGCOLOR, 125);
+AddColumn(corr, "Corr %", 1.2);
+AddColumn(VALUE_AVERAGE, "Value Average", 1.2);
+
+_SECTION_END();
